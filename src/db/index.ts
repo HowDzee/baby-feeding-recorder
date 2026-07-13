@@ -1,7 +1,8 @@
-export type FeedingType = 'breast_left' | 'breast_right' | 'breast_both' | 'formula'
-export type DiaperType = 'pee' | 'poop' | 'both'
+import type { Feeding, Diaper, FeedingType, DiaperType } from '../types'
 
-export interface Feeding {
+const DB_NAME = 'baby-recorder'
+
+type RawFeeding = {
   id: string
   type: FeedingType
   amount: number | null
@@ -10,9 +11,11 @@ export interface Feeding {
   endedAt: Date | null
   note: string
   createdAt: Date
+  _ts: number
+  _endedTs: number | null
 }
 
-export interface Diaper {
+type RawDiaper = {
   id: string
   type: DiaperType
   color: string | null
@@ -21,32 +24,34 @@ export interface Diaper {
   recordedAt: Date
   note: string
   createdAt: Date
+  _ts: number
 }
 
-export type RecordId = string
-
-export const FEEDING = 'feeding'
-export const DIAPER = 'diaper'
-
-let db: IDBDatabase | null = null
-
-function open() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
-    const req = indexedDB.open('baby-recorder', 1)
+function open(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1)
     req.onupgradeneeded = () => {
       const d = req.result
       if (!d.objectStoreNames.contains('feeding')) {
         const f = d.createObjectStore('feeding', { keyPath: 'id' })
-        f.createIndex('startedAt', 'startedAt')
+        f.createIndex('startedAt', '_ts')
       }
       if (!d.objectStoreNames.contains('diaper')) {
         const dd = d.createObjectStore('diaper', { keyPath: 'id' })
-        dd.createIndex('recordedAt', 'recordedAt')
+        dd.createIndex('recordedAt', '_ts')
       }
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })
+}
+
+function toFeeding(r: RawFeeding): Feeding {
+  return { ...r, _ts: undefined as never, _endedTs: undefined as never } as unknown as Feeding
+}
+
+function toDiaper(r: RawDiaper): Diaper {
+  return { ...r, _ts: undefined as never } as unknown as Diaper
 }
 
 function tx(db: IDBDatabase, store: string, mode: IDBTransactionMode) {
@@ -61,13 +66,8 @@ function tx(db: IDBDatabase, store: string, mode: IDBTransactionMode) {
   }
 }
 
-function clearStore(store: string) {
-  return tx(db, store, 'readwrite').then(({ done }) => done())
-}
-
 export async function resetDB() {
-  db = null
-  await indexedDB.deleteDatabase('baby-recorder')
+  await indexedDB.deleteDatabase(DB_NAME)
 }
 
 export async function addFeeding(item: {
@@ -77,22 +77,27 @@ export async function addFeeding(item: {
   startedAt: Date
   endedAt: Date | null
   note: string
-}) {
-  const record: Feeding = { id: crypto.randomUUID(), ...item, createdAt: new Date() }
+}): Promise<string> {
+  const raw: RawFeeding = {
+    id: crypto.randomUUID(),
+    ...item,
+    createdAt: new Date(),
+    _ts: item.startedAt.getTime(),
+    _endedTs: item.endedAt ? item.endedAt.getTime() : null
+  }
   const d = await open()
   try {
-    await tx(d, 'feeding', 'readwrite').then(async ({ store, done }) => {
-      await new Promise<void>((resolve, reject) => {
-        const r = store.put(record)
-        r.onsuccess = () => resolve()
-        r.onerror = () => reject(r.error)
-      })
-      await done()
+    const { store, done } = tx(d, 'feeding', 'readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const r = store.put(raw)
+      r.onsuccess = () => resolve()
+      r.onerror = () => reject(r.error)
     })
+    await done()
+    return raw.id
   } finally {
     d.close()
   }
-  return record.id
 }
 
 export async function addDiaper(item: {
@@ -102,25 +107,29 @@ export async function addDiaper(item: {
   hadRash: boolean
   recordedAt: Date
   note: string
-}) {
-  const record: Diaper = { id: crypto.randomUUID(), ...item, createdAt: new Date() }
+}): Promise<string> {
+  const raw: RawDiaper = {
+    id: crypto.randomUUID(),
+    ...item,
+    createdAt: new Date(),
+    _ts: item.recordedAt.getTime()
+  }
   const d = await open()
   try {
-    await tx(d, 'diaper', 'readwrite').then(async ({ store, done }) => {
-      await new Promise<void>((resolve, reject) => {
-        const r = store.put(record)
-        r.onsuccess = () => resolve()
-        r.onerror = () => reject(r.error)
-      })
-      await done()
+    const { store, done } = tx(d, 'diaper', 'readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const r = store.put(raw)
+      r.onsuccess = () => resolve()
+      r.onerror = () => reject(r.error)
     })
+    await done()
+    return raw.id
   } finally {
     d.close()
   }
-  return record.id
 }
 
-export async function getFeedingsByDate(start: Date, end: Date) {
+export async function getFeedingsByDate(start: Date, end: Date): Promise<Feeding[]> {
   const d = await open()
   try {
     const { store, done } = tx(d, 'feeding', 'readonly')
@@ -132,7 +141,7 @@ export async function getFeedingsByDate(start: Date, end: Date) {
       req.onsuccess = () => {
         const cursor = req.result
         if (cursor) {
-          out.push(cursor.value as Feeding)
+          out.push(toFeeding(cursor.value as RawFeeding))
           cursor.continue()
         } else {
           resolve()
@@ -147,7 +156,7 @@ export async function getFeedingsByDate(start: Date, end: Date) {
   }
 }
 
-export async function getDiapersByDate(start: Date, end: Date) {
+export async function getDiapersByDate(start: Date, end: Date): Promise<Diaper[]> {
   const d = await open()
   try {
     const { store, done } = tx(d, 'diaper', 'readonly')
@@ -159,7 +168,7 @@ export async function getDiapersByDate(start: Date, end: Date) {
       req.onsuccess = () => {
         const cursor = req.result
         if (cursor) {
-          out.push(cursor.value as Diaper)
+          out.push(toDiaper(cursor.value as RawDiaper))
           cursor.continue()
         } else {
           resolve()
@@ -177,14 +186,13 @@ export async function getDiapersByDate(start: Date, end: Date) {
 export async function deleteFeeding(id: string) {
   const d = await open()
   try {
-    await tx(d, 'feeding', 'readwrite').then(async ({ store, done }) => {
-      await new Promise<void>((resolve, reject) => {
-        const r = store.delete(id)
-        r.onsuccess = () => resolve()
-        r.onerror = () => reject(r.error)
-      })
-      await done()
+    const { store, done } = tx(d, 'feeding', 'readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const r = store.delete(id)
+      r.onsuccess = () => resolve()
+      r.onerror = () => reject(r.error)
     })
+    await done()
   } finally {
     d.close()
   }
@@ -193,14 +201,13 @@ export async function deleteFeeding(id: string) {
 export async function deleteDiaper(id: string) {
   const d = await open()
   try {
-    await tx(d, 'diaper', 'readwrite').then(async ({ store, done }) => {
-      await new Promise<void>((resolve, reject) => {
-        const r = store.delete(id)
-        r.onsuccess = () => resolve()
-        r.onerror = () => reject(r.error)
-      })
-      await done()
+    const { store, done } = tx(d, 'diaper', 'readwrite')
+    await new Promise<void>((resolve, reject) => {
+      const r = store.delete(id)
+      r.onsuccess = () => resolve()
+      r.onerror = () => reject(r.error)
     })
+    await done()
   } finally {
     d.close()
   }
