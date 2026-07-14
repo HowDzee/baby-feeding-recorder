@@ -3,3 +3,19 @@ dist
 .vite
 *.log
 .DS_Store
+
+# SQLite runtime files (WAL/shm created during operation)
+data.db-shm
+data.db-wal
+
+# Build artifacts
+src/__tests__/*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+tsconfig.app.tsbuildinfo
+
+# Prevent compiled JS artifacts in src (Vite outputs to dist/, not src/)
+src/**/*.js
+src/*.js
+!src/index.css
+!src/setupTests.*

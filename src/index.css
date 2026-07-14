@@ -2,17 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ======== Liquid Design tokens ======== */
 :root {
-  --fs-sm: clamp(0.75rem, 1.2vw, 0.875rem);
+  color-scheme: light;
+
+  /* Fluid type scale */
+  --fs-xs: clamp(0.75rem, 1.2vw, 0.875rem);
   --fs-base: clamp(0.9rem, 1.5vw, 1rem);
   --fs-lg: clamp(1.1rem, 2vw, 1.5rem);
   --fs-xl: clamp(1.5rem, 3vw, 2.5rem);
   --fs-2xl: clamp(2rem, 4vw, 3.5rem);
-  --btn-min: clamp(80px, 28cqi, 140px);
-  --btn-h: clamp(48px, 6cqi, 64px);
-  --card-p: clamp(12px, 2cqi, 24px);
-  color-scheme: light;
+
+  /* Fluid layout tokens — cqi = container inline size */
+  --btn-min: clamp(80px, 35cqi, 140px);
+  --btn-h: clamp(48px, 7cqi, 64px);
+  --card-p: clamp(12px, 3cqi, 24px);
 }
 
-html, body, #root { min-height: 100dvh; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
+html, body, #root {
+  min-height: 100dvh;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inline style map used by components — kept intentionally as plain CSS
+   classes so Tree-shaking and JIT scanning both see them. */
+.px-fluid-c { padding-left: var(--card-p); padding-right: var(--card-p); }
+.py-fluid-c { padding-top: var(--card-p); padding-bottom: var(--card-p); }
+.p-fluid-c { padding: var(--card-p); }
+.p-fluid-xs { padding: var(--fs-xs); }
+.p-fluid-base { padding: var(--fs-base); }
+.p-fluid-lg { padding: var(--fs-lg); }
+.p-fluid-xl { padding: var(--fs-xl); }
+.p-fluid-2xl { padding: var(--fs-2xl); }
+
+/* Mobile-safe: iOS Safari overscroll bounce doesn't break form interaction */
+html { overscroll-behavior-y: none; }

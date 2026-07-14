@@ -1,44 +1,44 @@
 import { create } from 'zustand'
 import type { Feeding, Diaper } from '../types'
-import { addFeeding, addDiaper, deleteFeeding, deleteDiaper, getFeedingsByDate, getDiapersByDate } from '../db'
-import type { FeedingType, DiaperType } from '../types'
+import {
+  remoteFeedings,
+  remoteDiapers,
+  remoteAddFeeding,
+  remoteAddDiaper,
+  remoteDeleteFeeding,
+  remoteDeleteDiaper,
+} from '../db/remoteApi'
 
 export interface DailyRecords {
-  date: Date
-  feedings: Feeding[]
-  diapers: Diaper[]
+ date: Date
+ feedings: Feeding[]
+ diapers: Diaper[]
 }
 
-interface RecordsState {
-  addFeeding: (inp: {
-    type: FeedingType
-    amount: number | null
-    durationSec: number | null
-    startedAt: Date
-    endedAt: Date | null
-    note: string
-  }) => Promise<string>
-  addDiaper: (inp: {
-    type: DiaperType
-    color: string | null
-    consistency: string | null
-    hadRash: boolean
-    recordedAt: Date
-    note: string
-  }) => Promise<string>
-  deleteFeeding: (id: string) => Promise<void>
-  deleteDiaper: (id: string) => Promise<void>
-  getDailyRecords: (start: Date, end: Date) => Promise<DailyRecords>
+export interface RecordsState {
+ addFeeding: (inp: Parameters<typeof remoteAddFeeding>[0]) => Promise<string>
+ addDiaper: (inp: Parameters<typeof remoteAddDiaper>[0]) => Promise<string>
+ deleteFeeding: (id: string) => Promise<void>
+ deleteDiaper: (id: string) => Promise<void>
+ getDailyRecords: (start: Date, end: Date) => Promise<DailyRecords>
 }
 
-export default create<RecordsState>((set, get) => ({
-  addFeeding: async (inp) => addFeeding(inp),
-  addDiaper: async (inp) => addDiaper(inp),
-  deleteFeeding: async (id) => { await deleteFeeding(id) },
-  deleteDiaper: async (id) => { await deleteDiaper(id) },
-  getDailyRecords: async (start, end) => ({
-    date: start,
-    feedings: await getFeedingsByDate(start, end),
-    diapers: await getDiapersByDate(start, end)
-  })
+// Always remote — data lives in server-side SQLite database
+const useRecordsBase = create<RecordsState>(() => ({
+ addFeeding: (inp) => remoteAddFeeding(inp),
+ addDiaper: (inp) => remoteAddDiaper(inp),
+ deleteFeeding: (id) => remoteDeleteFeeding(id),
+ deleteDiaper: (id) => remoteDeleteDiaper(id),
+ getDailyRecords: async (start, end) => ({
+  date: start,
+  feedings: await remoteFeedings(start, end),
+  diapers: await remoteDiapers(start, end),
+ }),
 }))
+
+// Stable hook — never recreates the store
+export function useRecords(): RecordsState {
+ return useRecordsBase()
+}
+
+export default useRecordsBase
