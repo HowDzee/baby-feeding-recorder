@@ -1,4 +1,4 @@
-export type FeedingType = 'breast_left' | 'breast_right' | 'breast_both' | 'formula'
+export type FeedingType = 'breast_left' | 'breast_right' | 'breast_both' | 'breast_bottle' | 'formula'
 export type DiaperType = 'pee' | 'poop' | 'both'
 
 export interface Feeding {
