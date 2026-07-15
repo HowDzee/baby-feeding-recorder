@@ -36,7 +36,7 @@
 1. 将本项目克隆到服务器上（或导航到项目目录）：
 
 ```bash
-git clone https://github.com/<你的用户名>/baby-eating-recorder.git
+git clone https://github.com/HowDzee/baby-eating-recorder.git
 cd baby-eating-recorder
 ```
 
