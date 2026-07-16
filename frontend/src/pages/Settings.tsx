@@ -66,11 +66,11 @@ export default function Settings() {
     try {
       const { exportDB } = await import('../db')
       const buf = await exportDB()
-      const blob = new Blob([buf], { type: 'application/x-sqlite3' })
+      const blob = new Blob([buf], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `baby-recorder-backup-${new Date().toISOString().slice(0,10)}.sqlite`
+      a.download = `baby-recorder-backup-${new Date().toISOString().slice(0,10)}.json`
       a.click()
       URL.revokeObjectURL(url)
     } finally { setBusy(false) }
@@ -275,9 +275,9 @@ export default function Settings() {
           <Database className="h-5 w-5 text-coral" />
           数据管理
         </h2>
-        <p className="text-fluid-base text-ink-600 mb-4">
-          所有数据存储在本地 IndexedDB，不会上传到任何服务器。
-        </p>
+      <p className="text-fluid-base text-ink-600 mb-4">
+        所有数据存储在服务端 SQLite 数据库中，仅存于你自己的部署环境。
+      </p>
 
         {/* SQLite backup */}
         <div className="flex flex-col gap-2 mb-3">
@@ -386,7 +386,7 @@ export default function Settings() {
       )}
 
       <footer className="mt-10 text-center text-fluid-xs text-ink-600">
-        宝宝记录 v0.1 · 所有数据仅存于本地
+        宝宝记录 v0.1 · 数据存储于服务端 SQLite
       </footer>
     </div>
   )

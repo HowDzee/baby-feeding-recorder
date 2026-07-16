@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%25" y1="0%25" x2="100%25" y2="100%25">
+      <stop offset="0%" stop-color="#FF8FA3"/>
+      <stop offset="100%" stop-color="#F4728F"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%25" y="-20%25" width="140%25" height="140%25">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#bg)"/>
+  <g transform="translate(96,104) scale(1)" filter="url(#shadow)">
+    <!-- Baby bottle -->
+    <rect x="-14" y="-28" width="28" height="36" rx="8" fill="#fff"/>
+    <rect x="-10" y="8" width="20" height="10" rx="4" fill="#fff"/>
+    <path d="M-8 8 L-8 18 Q-8 26 0 26 Q8 26 8 18 L8 8" fill="none" stroke="#fff" stroke-width="4"/>
+    <circle cx="0" cy="-14" r="5" fill="#7DD3C0" opacity="0.8"/>
+  </g>
+</svg>

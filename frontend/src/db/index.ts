@@ -276,19 +276,39 @@ export async function importXlsx(arrayBuf: ArrayBuffer): Promise<number> {
 }
 
 export async function exportDB(): Promise<ArrayBuffer> {
-	const [feedings, diapers] = await Promise.all([
-		getFeedingsByDate(new Date(0), new Date()),
-		getDiapersByDate(new Date(0), new Date()),
-	])
-	const blob = new Blob(
-		[JSON.stringify({ feedings, diapers }, null, 2)],
-		{ type: 'application/json' },
-	)
-	return blob.arrayBuffer()
+  const [feedings, diapers] = await Promise.all([
+    getFeedingsByDate(new Date(0), new Date()),
+    getDiapersByDate(new Date(0), new Date()),
+  ])
+  const json = JSON.stringify({ feedings, diapers }, null, 2)
+  return new TextEncoder().encode(json).buffer
 }
 
-export async function importDB(_data: ArrayBuffer): Promise<void> {
-	throw new Error(
-		'数据恢复请通过服务器端管理工具操作，或联系管理员。',
-	)
+export async function importDB(data: ArrayBuffer): Promise<void> {
+  const json = new TextDecoder().decode(data)
+  const parsed = JSON.parse(json) as { feedings: any[]; diapers: any[] }
+  let count = 0
+  for (const r of parsed.feedings ?? []) {
+    await addFeeding({
+      type: r.type,
+      amount: r.amount ?? null,
+      durationSec: r.durationSec ?? null,
+      startedAt: new Date(r.startedAt),
+      endedAt: r.endedAt ? new Date(r.endedAt) : null,
+      note: r.note ?? '',
+    })
+    count++
+  }
+  for (const r of parsed.diapers ?? []) {
+    await addDiaper({
+      type: r.type,
+      color: r.color ?? null,
+      consistency: r.consistency ?? null,
+      hadRash: !!r.hadRash,
+      recordedAt: new Date(r.recordedAt),
+      note: r.note ?? '',
+    })
+    count++
+  }
+  if (count === 0) throw new Error('备份文件中没有可导入的数据')
 }
