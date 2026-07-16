@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList } from 'lucide-react'
+import { ClipboardList, Settings } from 'lucide-react'
 import QuickActions from '../components/QuickActions'
 import StatCard from '../components/StatCard'
 import DailyTimeline from '../components/charts/DailyTimeline'
@@ -54,16 +54,24 @@ export default function Home() {
 
       <DailyTimeline feedings={records?.feedings ?? []} diapers={records?.diapers ?? []} />
 
-      <nav className="mt-8 flex justify-center">
-        <button
-          type="button"
-          onClick={() => navigate('/history')}
-          className="flex items-center gap-2 rounded-full bg-white px-6 py-3 shadow-sm text-fluid-lg font-semibold active:scale-95"
-        >
-          <ClipboardList className="h-5 w-5" />
-          历史记录
-        </button>
-      </nav>
+<nav className="mt-8 flex flex-wrap justify-center gap-3">
+  <button
+    type="button"
+    onClick={() => navigate('/history')}
+    className="flex items-center gap-2 rounded-full bg-white px-6 py-3 shadow-sm text-fluid-lg font-semibold active:scale-95"
+  >
+    <ClipboardList className="h-5 w-5" />
+    历史记录
+  </button>
+  <button
+    type="button"
+    onClick={() => navigate('/settings')}
+    className="flex items-center gap-2 rounded-full bg-white px-6 py-3 shadow-sm text-fluid-lg font-semibold active:scale-95"
+  >
+    <Settings className="h-5 w-5" />
+    设置
+  </button>
+</nav>
     </div>
   )
 }

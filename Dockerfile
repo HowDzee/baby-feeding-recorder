@@ -17,9 +17,7 @@ RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o server ./cmd/server
 # --- Runtime stage ---
 FROM alpine:latest
 WORKDIR /app
-COPY --from=frontend /app/dist ./dist
 COPY --from=builder /app/server ./server
 RUN mkdir -p data
 EXPOSE 3000
-ENV NODE_ENV=production
 CMD ["./server"]
