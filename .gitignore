@@ -1,6 +1,5 @@
 # Go build artifacts
-server
-server.exe
+/server
 *.exe
 
 # Go test coverage
