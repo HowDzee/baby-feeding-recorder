@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Build ${{ matrix.target }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -67,11 +67,12 @@ jobs:
           path: ./artifacts
 
       - name: Package artifacts
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
           mkdir -p release
           for dir in artifacts/*/; do
             dirname=$(basename "$dir")
-            # Zip for Windows (if present), tar.gz for others
             if ls "$dir"/*.exe 1>/dev/null 2>&1; then
               (cd "$dir" && zip -r ../../release/${dirname}.zip .)
             else
@@ -82,9 +83,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           files: release/*
           generate_release_notes: true
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
