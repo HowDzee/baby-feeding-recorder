@@ -9,8 +9,6 @@ RUN npm run build
 # --- Go backend build stage ---
 FROM golang:1.23-alpine AS builder
 WORKDIR /app
-COPY backend/go.mod backend/go.sum ./
-RUN go mod download
 COPY backend/ ./
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o server ./cmd/server
 
