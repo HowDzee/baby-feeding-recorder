@@ -1,18 +1,25 @@
-FROM node:24-alpine
-
-# Install openssl for better-sqlite3 native build (libssl needed at runtime)
-RUN apk add --no-cache python3 make g++ libstdc++ libssl3
-
+# --- Frontend build stage ---
+FROM node:20-alpine AS frontend
 WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
 
-COPY package.json package-lock.json ./
-RUN npm install --omit=dev
+# --- Go backend build stage ---
+FROM golang:1.23-alpine AS builder
+WORKDIR /app
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+COPY backend/cmd/ backend/internal/ backend/go.mod ./
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o server ./cmd/server
 
-COPY dist/ ./dist/
-COPY server.js ./
-COPY data.db* ./
-
+# --- Runtime stage ---
+FROM alpine:latest
+WORKDIR /app
+COPY --from=frontend /app/dist ./dist
+COPY --from=builder /app/server ./server
+RUN mkdir -p data
 EXPOSE 3000
-
 ENV NODE_ENV=production
-CMD ["node", "server.js"]
+CMD ["./server"]
