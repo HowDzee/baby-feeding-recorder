@@ -10,6 +10,40 @@ export default function Home() {
   const navigate = useNavigate()
   const store = useRecords()
 
+  const [babyName, setBabyName] = useState('')
+  const [babyBirthday, setBabyBirthday] = useState('')
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('baby-recorder-settings')
+      if (raw) {
+        const s = JSON.parse(raw)
+        if (s.babyName) setBabyName(s.babyName)
+        if (s.babyBirthday) setBabyBirthday(s.babyBirthday)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  // Calculate age from birthday
+  const ageText = useMemo(() => {
+    if (!babyBirthday) return ''
+    const birthday = new Date(babyBirthday)
+    const now = new Date()
+    const months = (now.getFullYear() - birthday.getFullYear()) * 12 + now.getMonth() - birthday.getMonth()
+    if (months < 1) return '刚出生 🍼'
+    if (months < 12) return `${months} 个月大了`
+    const years = Math.floor(months / 12)
+    const remainMonths = months % 12
+    return remainMonths > 0 ? `${years} 岁 ${remainMonths} 个月` : `${years} 岁了`
+  }, [babyBirthday])
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours()
+    const timeGreeting = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好'
+    if (babyName) return `${timeGreeting}，${babyName}`
+    return `${timeGreeting}，宝宝`
+  }, [babyName])
+
   const now = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -33,11 +67,14 @@ export default function Home() {
   const diaperCount = (records?.diapers ?? []).length
 
   return (
-    <div className="mx-auto max-w-2xl p-fluid-c">
-      <header className="py-fluid-c">
-        <h1 className="text-fluid-2xl font-bold">你好，宝宝 👋</h1>
-        <p className="text-fluid-lg text-ink-600 mt-1">今天吃了吗？</p>
-      </header>
+<div className="mx-auto max-w-2xl p-fluid-c">
+  <header className="py-fluid-c">
+    <h1 className="text-fluid-2xl font-bold">{greeting} 👋</h1>
+    {ageText && <p className="text-fluid-base text-ink-600 mt-1">{ageText}</p>}
+    {!babyBirthday && babyName && (
+      <p className="text-fluid-sm text-ink-400 mt-1">去设置页添加出生日期可以看到宝宝月龄哦</p>
+    )}
+  </header>
 
       <section style={{ containerType: 'inline-size' }}>
         <QuickActions onNavigate={(t) => navigate(`/add?type=${t}`)} />
