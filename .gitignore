@@ -2,7 +2,6 @@
 server
 server.exe
 *.exe
-go.sum
 
 # Go test coverage
 *.coverprofile
