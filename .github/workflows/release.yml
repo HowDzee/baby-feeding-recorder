@@ -44,9 +44,11 @@ jobs:
 
       - name: Build
         working-directory: backend
+        env:
+          CGO_ENABLED: 0
         run: |
           go mod download
-          CGO_ENABLED=0 go build -ldflags="-s -w" -o baby-recorder-${{ matrix.target }}${{ matrix.ext }} ./cmd/server
+          go build -ldflags="-s -w" -o baby-recorder-${{ matrix.target }}${{ matrix.ext }} ./cmd/server
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
