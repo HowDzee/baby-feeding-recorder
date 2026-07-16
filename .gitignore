@@ -2,23 +2,24 @@
 /server
 *.exe
 
+# Go module checksum (not needed in repo, always regenerated)
+# go.sum  ← kept in repo so Docker builds can resolve deps
+
 # Go test coverage
 *.coverprofile
 
-# Data directory (SQLite runtime files)
-data/
-
-# Node
-frontend/dist
-node_modules
-.vite
-*.log
-.DS_Store
-
-# SQLite database files
+# SQLite runtime data (per-instance, never commit)
+backend/data/
 *.db
 *.db-shm
 *.db-wal
+
+# Node.js
+frontend/dist
+frontend/node_modules
+.vite
+*.log
+.DS_Store
 
 # Build artifacts
 src/__tests__/*.tsbuildinfo
