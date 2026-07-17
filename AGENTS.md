@@ -76,7 +76,7 @@ docker compose up -d   # 一键构建并启动
 - **液态设计**：`src/index.css` 使用 `clamp()` + `cqi` 容器查询，Tailwind 扩展了 `coral` / `mint` / `warm-*` / `ink-*` / `warn` 调色板。
 - **Settings** 页偏好设置存在 `localStorage` (key `baby-recorder-settings`)，这是前端唯一不经过 API 的持久化。
 - **Go 后端结构**：`cmd/server/main.go` → `internal/routes/` (路由注册) → `internal/queries/` (SQL) → `internal/db/` (初始化 + schema) → `internal/models/` (类型 + Scan 函数)。
-- **前端 dist 嵌入**：Go 编译时通过 `//go:embed dist/*` 嵌入 `frontend/dist/`。构建顺序：先 `npm run build` 产出 `dist/`，再 `go build`。
+- **前端 dist 嵌入**：Go 编译时通过 `//go:embed dist/*` 嵌入 `frontend/dist/`。构建顺序：先 `npm run build` 产出 `frontend/dist/`，再 `cp -r frontend/dist/* backend/internal/web/dist/`，最后 `go build`。
 
 ## 前端路由
 
